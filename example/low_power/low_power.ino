@@ -99,9 +99,7 @@ void loop()
     digitalWrite(POWER_1V8, 0);
 
     // Close AT
-    digitalWrite(IO_GSM_PWRKEY, HIGH);
-    delay(5000);
-    digitalWrite(IO_GSM_PWRKEY, LOW);
+    at_sleep();
 
     int sleep_s = atoi(sleep_time);
     esp_sleep_enable_timer_wakeup(sleep_s * uS_TO_S_FACTOR);
@@ -125,11 +123,13 @@ void pin_init()
 
     pinMode(IO_GSM_RST, OUTPUT);
     pinMode(IO_GSM_PWRKEY, OUTPUT);
+    pinMode(IO_GSM_DTR, OUTPUT);
 
     digitalWrite(POWER_3V3, HIGH);
     digitalWrite(POWER_1V8, HIGH);
     digitalWrite(LED_PIN, HIGH);
 
+    digitalWrite(IO_GSM_DTR, LOW);
     digitalWrite(IO_GSM_RST, HIGH);
     delay(1000);
     digitalWrite(IO_GSM_RST, LOW);
@@ -341,4 +341,16 @@ String sendData(String command, const int timeout, boolean debug)
         Serial.print(response);
     }
     return response;
+}
+
+void at_sleep()
+{
+    // PWK, close module
+    // digitalWrite(IO_GSM_PWRKEY, HIGH);
+    // delay(5000);
+    // digitalWrite(IO_GSM_PWRKEY, LOW);
+
+    // AT command, sleep module
+    sendData("AT+CSCLK=1", 2000, DEBUG);
+    digitalWrite(IO_GSM_DTR, HIGH);
 }

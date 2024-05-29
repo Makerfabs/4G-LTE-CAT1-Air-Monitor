@@ -32,6 +32,7 @@
 
 #define IO_GSM_PWRKEY 42
 #define IO_GSM_RST 41
+#define IO_GSM_DTR 39
 
 
 #endif
