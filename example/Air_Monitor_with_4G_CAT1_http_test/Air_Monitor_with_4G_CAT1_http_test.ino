@@ -9,9 +9,6 @@ String Apikey = "TE0ELD7W76JLH1DA";
 
 #define DEBUG true
 
-#define LTE_RESET_PIN 41
-#define LTE_PWRKEY_PIN 42
-
 #define POWER_3V3 21
 #define POWER_1V8 48
 
@@ -104,30 +101,20 @@ void pin_init()
     pinMode(BUTTON_PIN, INPUT);
     pinMode(LED_PIN, OUTPUT);
     pinMode(BAT_PIN, INPUT);
-
-    pinMode(IO_GSM_RST, OUTPUT);
-    pinMode(IO_GSM_PWRKEY, OUTPUT);
-
+    
     digitalWrite(POWER_3V3, HIGH);
     digitalWrite(POWER_1V8, HIGH);
     digitalWrite(LED_PIN, HIGH);
+    
+    pinMode(IO_GSM_RST, OUTPUT);
+    pinMode(IO_GSM_PWRKEY, OUTPUT);
 
-    digitalWrite(IO_GSM_RST, HIGH);
-    delay(1000);
     digitalWrite(IO_GSM_RST, LOW);
-    delay(500);
-    digitalWrite(IO_GSM_PWRKEY, HIGH);
-    delay(1000);
     digitalWrite(IO_GSM_PWRKEY, LOW);
-
-    pinMode(LTE_RESET_PIN, OUTPUT);
-    digitalWrite(LTE_RESET_PIN, LOW);
-    pinMode(LTE_PWRKEY_PIN, OUTPUT);
-    digitalWrite(LTE_PWRKEY_PIN, LOW);
     delay(100);
-    digitalWrite(LTE_PWRKEY_PIN, HIGH);
+    digitalWrite(IO_GSM_PWRKEY, HIGH);
     delay(2000);
-    digitalWrite(LTE_PWRKEY_PIN, LOW);
+    digitalWrite(IO_GSM_PWRKEY, LOW);
 }
 
 void sensor_init()
