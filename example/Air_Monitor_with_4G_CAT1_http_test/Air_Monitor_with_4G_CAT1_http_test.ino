@@ -26,7 +26,9 @@ String Apikey = "TE0ELD7W76JLH1DA";
 #define IO_GSM_PWRKEY 42
 #define IO_GSM_RST 41
 
+#define DBG_OUT USBSerial // Serial
 HardwareSerial mySerial2(2);
+
 Adafruit_AHT10 aht;
 Adafruit_SGP30 sgp;
 BH1750 lightMeter;
@@ -48,11 +50,10 @@ int init_flag_BH1750 = 0;
 void setup()
 {
 
-    Serial.begin(115200);
+    DBG_OUT.begin(115200);
     mySerial2.begin(115200, SERIAL_8N1, IO_RXD2, IO_TXD2);
 
     pin_init();
-
     sensor_init();
 
     while (1)
@@ -63,7 +64,7 @@ void setup()
             delay(100);
             if (digitalRead(BUTTON_PIN) == 0)
             {
-                Serial.println("Button press down.");
+                DBG_OUT.println("Button press down.");
                 break;
             }
         }
@@ -71,27 +72,16 @@ void setup()
         {
             sensor_read();
             value_report();
-            http_request();
+
             delay(1000);
         }
     }
-
     at_init();
 }
 
 void loop()
 {
-    // put your main code here, to run repeatedly:
-    while (Serial.available() > 0)
-    {
-        mySerial2.write(Serial.read());
-        yield();
-    }
-    while (mySerial2.available() > 0)
-    {
-        Serial.write(mySerial2.read());
-        yield();
-    }
+    http_request();
 }
 
 void pin_init()
@@ -101,11 +91,11 @@ void pin_init()
     pinMode(BUTTON_PIN, INPUT);
     pinMode(LED_PIN, OUTPUT);
     pinMode(BAT_PIN, INPUT);
-    
+
     digitalWrite(POWER_3V3, HIGH);
     digitalWrite(POWER_1V8, HIGH);
     digitalWrite(LED_PIN, HIGH);
-    
+
     pinMode(IO_GSM_RST, OUTPUT);
     pinMode(IO_GSM_PWRKEY, OUTPUT);
 
@@ -119,12 +109,12 @@ void pin_init()
 
 void sensor_init()
 {
-    Serial.println("Sensor init begin.");
+    DBG_OUT.println("Sensor init begin.");
 
     Wire.begin(SDA, SCL);
 
     if (!aht.begin())
-        Serial.println("SGP30 not found.");
+        DBG_OUT.println("SGP30 not found.");
     else
         init_flag_aht10 = 1;
 
@@ -134,11 +124,11 @@ void sensor_init()
         init_flag_SGP30 = 1;
 
     if (!lightMeter.begin())
-        Serial.println("BH1750 not found.");
+        DBG_OUT.println("BH1750 not found.");
     else
         init_flag_BH1750 = 1;
 
-    Serial.println("Sensor init over.");
+    DBG_OUT.println("Sensor init over.");
 }
 
 void sensor_read()
@@ -175,7 +165,7 @@ void read_SGP30()
 
     if (!sgp.IAQmeasure())
     {
-        Serial.println("Measurement failed");
+        DBG_OUT.println("Measurement failed");
         return;
     }
     tvoc = sgp.TVOC;
@@ -183,7 +173,7 @@ void read_SGP30()
 
     if (!sgp.IAQmeasureRaw())
     {
-        Serial.println("Raw Measurement failed");
+        DBG_OUT.println("Raw Measurement failed");
         return;
     }
     H2 = sgp.rawH2;
@@ -195,46 +185,46 @@ void read_BH1750()
     lux = lightMeter.readLightLevel();
 }
 
-void read_bat()//
+void read_bat() //
 {
     bat_vol = 3.3 * analogRead(BAT_PIN) / 4096 * 2 + 0.3;
 }
 
 void value_report()
 {
-    Serial.println("\n-------------------------------------");
-    Serial.printf("Num:\t%d\n", count);
+    DBG_OUT.println("\n-------------------------------------");
+    DBG_OUT.printf("Num:\t%d\n", count);
 
-    Serial.print("Temperature: ");
-    Serial.print(temperature);
-    Serial.println(" degrees C");
-    Serial.print("Humidity: ");
-    Serial.print(humidity);
-    Serial.println("% rH");
+    DBG_OUT.print("Temperature: ");
+    DBG_OUT.print(temperature);
+    DBG_OUT.println(" degrees C");
+    DBG_OUT.print("Humidity: ");
+    DBG_OUT.print(humidity);
+    DBG_OUT.println("% rH");
 
-    Serial.print("TVOC ");
-    Serial.print(tvoc);
-    Serial.print(" ppb\t");
-    Serial.print("eCO2 ");
-    Serial.print(eCO2);
-    Serial.println(" ppm");
+    DBG_OUT.print("TVOC ");
+    DBG_OUT.print(tvoc);
+    DBG_OUT.print(" ppb\t");
+    DBG_OUT.print("eCO2 ");
+    DBG_OUT.print(eCO2);
+    DBG_OUT.println(" ppm");
 
-    Serial.print("Raw H2 ");
-    Serial.print(H2);
-    Serial.print(" \t");
-    Serial.print("Raw Ethanol ");
-    Serial.print(Ethanol);
-    Serial.println("");
+    DBG_OUT.print("Raw H2 ");
+    DBG_OUT.print(H2);
+    DBG_OUT.print(" \t");
+    DBG_OUT.print("Raw Ethanol ");
+    DBG_OUT.print(Ethanol);
+    DBG_OUT.println("");
 
-    Serial.print("Light: ");
-    Serial.print(lux);
-    Serial.println(" lx");
+    DBG_OUT.print("Light: ");
+    DBG_OUT.print(lux);
+    DBG_OUT.println(" lx");
 
-    Serial.print("Bat: ");
-    Serial.print(bat_vol);
-    Serial.println(" V");
+    DBG_OUT.print("Bat: ");
+    DBG_OUT.print(bat_vol);
+    DBG_OUT.println(" V");
 
-    Serial.println("\n-------------------------------------");
+    DBG_OUT.println("\n-------------------------------------");
 
     // 14:37:57.103 -> Num:	5
     // 14:37:57.103 -> Temperature: 28.98 degrees C
@@ -247,7 +237,7 @@ void value_report()
 
 void at_init()
 {
-    Serial.println(F("void at_init()"));
+    DBG_OUT.println(F("void at_init()"));
 
     sendData("AT", 1000, DEBUG);
     delay(1000);
@@ -262,11 +252,13 @@ void at_init()
 
 void http_request()
 {
+    //AT+HTTPPARA="URL","http://api.thingspeak.com/update?api_key=TE0ELD7W76JLH1DA&field1=123&field2=456"
     // Http test
-    sendData("AT+HTTPINIT", 2000, DEBUG);
-    sendData("AT+HTTPPARA=\"URL\",\"https://api.thingspeak.com/update?api_key=" + Apikey + "&field1=" + (String)temperature + "&field2=" + (String)humidity + "&field3=" + (String)tvoc + "&field4=" + (String)eCO2 + "&field5=" + (String)H2 + "&field6=" + (String)Ethanol + "&field7=" + (String)lux + "&field8=" + (String)bat_vol +"\"\r\n", 2000, DEBUG);
-    sendData("AT+HTTPACTION=0", 3000, DEBUG);
-    sendData("AT+HTTPTERM", 3000, DEBUG);
+    sendData("AT+HTTPINIT", 2000, DEBUG); // 启动http服务
+    sendData("AT+HTTPPARA=\"URL\",\"http://api.thingspeak.com/update?api_key=" + Apikey + "&field1=" + (String)temperature + "&field2=" + (String)humidity + "&field3=" + (String)tvoc + "&field4=" + (String)eCO2 + "&field5=" + (String)H2 + "&field6=" + (String)Ethanol + "&field7=" + (String)lux + "&field8=" + (String)bat_vol + "\"\r\n", 2000, DEBUG);
+    sendData("AT+HTTPACTION=0", 3000, DEBUG); // 0-->GET
+    sendData("AT+HTTPTERM", 3000, DEBUG);     // 停止http服务
+    delay(6000);
 }
 
 String sendData(String command, const int timeout, boolean debug)
@@ -284,7 +276,7 @@ String sendData(String command, const int timeout, boolean debug)
     }
     if (debug)
     {
-        Serial.print(response);
+        DBG_OUT.print(response);
     }
     return response;
 }
