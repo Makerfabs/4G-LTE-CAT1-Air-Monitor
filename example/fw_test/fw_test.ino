@@ -24,7 +24,9 @@
 #define IO_GSM_PWRKEY 42
 #define IO_GSM_RST 41
 
+#define DBG_OUT  USBSerial //Serial
 HardwareSerial mySerial2(2);
+
 Adafruit_AHT10 aht;
 Adafruit_SGP30 sgp;
 BH1750 lightMeter;
@@ -43,10 +45,11 @@ int init_flag_aht10 = 0;
 int init_flag_SGP30 = 0;
 int init_flag_BH1750 = 0;
 
+
 void setup()
 {
 
-    Serial.begin(115200);
+    DBG_OUT.begin(115200);
     mySerial2.begin(115200, SERIAL_8N1, IO_RXD2, IO_TXD2);
 
     pin_init();
@@ -61,7 +64,7 @@ void setup()
             delay(100);
             if (digitalRead(BUTTON_PIN) == 0)
             {
-                Serial.println("Button press down.");
+                DBG_OUT.println("Button press down.");
                 break;
             }
         }
@@ -80,14 +83,14 @@ void setup()
 void loop()
 {
     // put your main code here, to run repeatedly:
-    while (Serial.available() > 0)
+    while (DBG_OUT.available() > 0)
     {
-        mySerial2.write(Serial.read());
+        mySerial2.write(DBG_OUT.read());
         yield();
     }
     while (mySerial2.available() > 0)
     {
-        Serial.write(mySerial2.read());
+        DBG_OUT.write(mySerial2.read());
         yield();
     }
 }
@@ -118,26 +121,26 @@ void pin_init()
 
 void sensor_init()
 {
-    Serial.println("Sensor init begin.");
+    DBG_OUT.println("Sensor init begin.");
 
     Wire.begin(SDA, SCL);
 
     if (!aht.begin())
-        Serial.println("SGP30 not found.");
+        DBG_OUT.println("SGP30 not found.");
     else
         init_flag_aht10 = 1;
 
     if (!sgp.begin())
-        Serial.println("SGP30 not found.");
+        DBG_OUT.println("SGP30 not found.");
     else
         init_flag_SGP30 = 1;
 
     if (!lightMeter.begin())
-        Serial.println("BH1750 not found.");
+        DBG_OUT.println("BH1750 not found.");
     else
         init_flag_BH1750 = 1;
 
-    Serial.println("Sensor init over.");
+    DBG_OUT.println("Sensor init over.");
 }
 
 void sensor_read()
@@ -174,7 +177,7 @@ void read_SGP30()
 
     if (!sgp.IAQmeasure())
     {
-        Serial.println("Measurement failed");
+        DBG_OUT.println("Measurement failed");
         return;
     }
     tvoc = sgp.TVOC;
@@ -182,7 +185,7 @@ void read_SGP30()
 
     if (!sgp.IAQmeasureRaw())
     {
-        Serial.println("Raw Measurement failed");
+        DBG_OUT.println("Raw Measurement failed");
         return;
     }
     H2 = sgp.rawH2;
@@ -201,39 +204,39 @@ void read_bat()
 
 void value_report()
 {
-    Serial.println("\n-------------------------------------");
-    Serial.printf("Num:\t%d\n", count);
+    DBG_OUT.println("\n-------------------------------------");
+    DBG_OUT.printf("Num:\t%d\n", count);
 
-    Serial.print("Temperature: ");
-    Serial.print(temperature);
-    Serial.println(" degrees C");
-    Serial.print("Humidity: ");
-    Serial.print(humidity);
-    Serial.println("% rH");
+    DBG_OUT.print("Temperature: ");
+    DBG_OUT.print(temperature);
+    DBG_OUT.println(" degrees C");
+    DBG_OUT.print("Humidity: ");
+    DBG_OUT.print(humidity);
+    DBG_OUT.println("% rH");
 
-    Serial.print("TVOC ");
-    Serial.print(tvoc);
-    Serial.print(" ppb\t");
-    Serial.print("eCO2 ");
-    Serial.print(eCO2);
-    Serial.println(" ppm");
+    DBG_OUT.print("TVOC ");
+    DBG_OUT.print(tvoc);
+    DBG_OUT.print(" ppb\t");
+    DBG_OUT.print("eCO2 ");
+    DBG_OUT.print(eCO2);
+    DBG_OUT.println(" ppm");
 
-    Serial.print("Raw H2 ");
-    Serial.print(H2);
-    Serial.print(" \t");
-    Serial.print("Raw Ethanol ");
-    Serial.print(Ethanol);
-    Serial.println("");
+    DBG_OUT.print("Raw H2 ");
+    DBG_OUT.print(H2);
+    DBG_OUT.print(" \t");
+    DBG_OUT.print("Raw Ethanol ");
+    DBG_OUT.print(Ethanol);
+    DBG_OUT.println("");
 
-    Serial.print("Light: ");
-    Serial.print(lux);
-    Serial.println(" lx");
+    DBG_OUT.print("Light: ");
+    DBG_OUT.print(lux);
+    DBG_OUT.println(" lx");
 
-    Serial.print("Bat: ");
-    Serial.print(bat_vol);
-    Serial.println(" V");
+    DBG_OUT.print("Bat: ");
+    DBG_OUT.print(bat_vol);
+    DBG_OUT.println(" V");
 
-    Serial.println("\n-------------------------------------");
+    DBG_OUT.println("\n-------------------------------------");
 
     // 14:37:57.103 -> Num:	5
     // 14:37:57.103 -> Temperature: 28.98 degrees C
@@ -246,7 +249,7 @@ void value_report()
 
 void at_init()
 {
-    Serial.println(F("void at_init()"));
+    DBG_OUT.println(F("void at_init()"));
 
     sendData("AT", 1000, DEBUG);
     delay(1000);
@@ -287,7 +290,7 @@ String sendData(String command, const int timeout, boolean debug)
     }
     if (debug)
     {
-        Serial.print(response);
+        DBG_OUT.print(response);
     }
     return response;
 }
