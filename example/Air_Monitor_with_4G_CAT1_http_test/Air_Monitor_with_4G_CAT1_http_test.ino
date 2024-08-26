@@ -5,7 +5,7 @@
 #include <Adafruit_SGP30.h>
 #include <BH1750.h>
 
-String Apikey = "TE0ELD7W76JLH1DA";
+String Apikey = "BPO52QKI6G319JOY";
 
 #define DEBUG true
 
